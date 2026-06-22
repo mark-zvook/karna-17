@@ -1,0 +1,4 @@
+# PLACEHOLDER — real measurement required (see docs/karna17_rtc.md §Drift Test)
+# Run the drift logger script on the CM5 board for ≥72 h with RV-3028 soldered,
+# then replace this file with actual data.
+timestamp_utc,system_unix,rtc_unix,drift_s,elapsed_h

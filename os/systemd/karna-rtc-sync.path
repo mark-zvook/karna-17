@@ -1,0 +1,14 @@
+[Unit]
+Description=Watch for NTP synchronisation and trigger RTC update
+Documentation=https://github.com/karna-project/KARNA-17
+# systemd-timesyncd creates this file once the first successful sync completes
+After=systemd-timesyncd.service
+
+[Path]
+# Trigger the .service when timesyncd marks the clock as synchronised
+PathExists=/run/systemd/timesync/synchronized
+# Re-trigger if the file disappears and reappears (e.g. after network reconnect)
+MakeDirectory=no
+
+[Install]
+WantedBy=multi-user.target

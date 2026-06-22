@@ -1,0 +1,9 @@
+{
+  "type": "time_status",
+  "is_valid": true,
+  "source": "ntp",
+  "rtc_present": true,
+  "ntp_synced": true,
+  "drift_seconds": 0.4,
+  "system_iso": "2026-06-22T10:00:00Z"
+}
