@@ -1,7 +1,3 @@
 Part,MPN,Qty,Footprint,Value,Note
-RTC IC,RV-3028-C7,1,TDFN-8 1.5x1.5mm,—,"I2C 0x52; ±1 ppm; 45 nA backup; no collision with MPU-6500@0x68"
-Battery holder,BK-912 (Keystone),1,THT 20mm,—,CR2032 coin-cell holder; through-hole; rated 0.3 A
-Battery,CR2032,1,—,3V 225 mAh,Backup supply for RV-3028; >10 yr standby at 45 nA
-Decoupling cap,GRM155R61A104KA01D (Murata),1,0402,100nF 10V X5R,VDD bypass; place ≤1 mm from pin 1
-Pull-up SDA,RC0402FR-074K7L (Yageo),1,0402,4.7kΩ,Omit if baseboard already pulls SDA high (likely — IMU present)
-Pull-up SCL,RC0402FR-074K7L (Yageo),1,0402,4.7kΩ,Omit if baseboard already pulls SCL high (likely — IMU present)
+Backup battery,CR1220,1,—,3V 40 mAh,"Backup for CM5 built-in rpi-rtc (VRTC pin on baseboard)"
+Battery holder,(on baseboard),1,—,—,"Already on baseboard; wired to CM5 VRTC — no additional holder needed"

@@ -1,17 +1,16 @@
 [Unit]
 Description=Sync hardware RTC from system clock after NTP synchronisation
 Documentation=https://github.com/karna-project/KARNA-17
-# Activated by karna-rtc-sync.path when /run/systemd/timesync/synchronized appears
-After=systemd-timesyncd.service
+After=time-sync.target
+Requires=time-sync.target
 
 [Service]
 Type=oneshot
 ExecStart=/sbin/hwclock --systohc --utc
-# Log result to journal
+RemainAfterExit=yes
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=karna-rtc-sync
 
 [Install]
-# Not enabled directly — started by the .path unit
-WantedBy=multi-user.target
+WantedBy=time-sync.target

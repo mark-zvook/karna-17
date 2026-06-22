@@ -1,17 +1,18 @@
-# KARNA-17 — RTC overlay fragment for /boot/firmware/config.txt
+# KARNA-17 — RTC configuration notes
 #
-# Chip: RV-3028-C7 (I2C addr 0x52, no collision with MPU-6500 @ 0x68 or INA219 @ 0x40)
-# Kernel driver: rtc-rv3028 (mainline since 5.7)
+# The CM5 has a built-in RTC in the RP1 south bridge (driver: rpi-rtc).
+# It registers as /dev/rtc0 automatically — NO dtoverlay is needed.
 #
-# Append these lines to /boot/firmware/config.txt (or include via setup_rtc.sh).
-# Do NOT add dtoverlay=i2c-rtc,ds3231 — that chip is 0x68 and collides with IMU.
-
-# Enable I2C bus 1 (already enabled for IMU/INA219 — keep if present)
-dtparam=i2c_arm=on
-dtparam=i2c_arm_baudrate=100000
-
-# Load RTC driver for RV-3028 on I2C-1
-dtoverlay=i2c-rtc,rv3028
-
-# Disable fake-hwclock (replaced by real RTC)
-# (setup_rtc.sh masks the service; this is a belt-and-suspenders note)
+# The baseboard has a CR1220 coin cell holder wired to the CM5 VRTC pin.
+# Inserting the battery is all that is needed for backup timekeeping.
+#
+# I2C bus 1 devices (for reference):
+#   0x50  — EEPROM (CM5 module)
+#   0x64  — unknown (baseboard peripheral)
+#   0x68  — MPU-6500 IMU
+#   (no external RTC chip on bus — rpi-rtc is not I2C-accessible from userspace)
+#
+# What setup_rtc.sh does:
+#   1. Disables fake-hwclock (conflicts with real RTC)
+#   2. Enables systemd-timesyncd for NTP
+#   3. Installs karna-rtc-sync.path/.service (hwclock --systohc after NTP sync)
