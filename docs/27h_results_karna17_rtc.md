@@ -160,78 +160,61 @@ this constant at each firmware release to the build date.
 
 ## Drift Test Results
 
-### Phase 1 — Real hardware measurement (3.02 h)
+### 27-hour real measurement
 
-**Board:** CM5 with built-in rpi-rtc  
-**Date:** 2026-06-22  
-**Duration:** 3.02 hours, 181 samples at 60-second interval  
-**Method:** sysfs tick-detection (`/sys/class/rtc/rtc0/{time,date}`) — no root, no hwclock  
-**NTP state:** inactive during measurement (confirmed via `timedatectl`)  
-**Data file:** `data/drift_log.csv`
+The 72-hour test was terminated at ~27 h after the 24 h checkpoint. All samples are real
+hardware measurements — no extrapolation.
 
-| Metric | Value |
-|--------|-------|
-| Rate | -0.111 ppm |
-| 95% CI | [-0.459, +0.238] ppm |
-| R² | 0.0022 |
-| Noise RMS | 7.3 ms |
+**Dataset:** 1 622 samples (real), 27.03 h  
+**Date:** 2026-06-23 → 2026-06-24  
+**Data file:** `data/drift_log_24h.csv`
 
-R² ≈ 0 is expected at this timescale: the adjtimex residuals (~±15 ms oscillation from the
-previous NTP sync) completely swamp the signal. This is a healthy sign — the RTC drift is
-smaller than the measurement noise floor at 3 hours.
-
-### Phase 2 — 24-hour extrapolated analysis
-
-The 3-hour regression (slope + residuals as noise pool) was extended to 24 hours
-(seed=42, reproducible). This gives a statistically tighter estimate of the true rate.
-
-**Combined dataset:** 1 440 samples (181 real + 1 259 extrapolated), 24.00 h
-
-| Metric | Measured (3 h) | Extrapolated (24 h) | Spec |
-|--------|----------------|---------------------|------|
-| Rate | -0.111 ppm | **-0.122 ppm** | ≤ ±5 ppm |
-| 95% CI | ±0.349 ppm | **±0.015 ppm** | — |
-| CI bounds | [-0.459, +0.238] | **[-0.137, −0.107]** | — |
-| R² | 0.0022 | 0.156 | — |
-| Per day | -9.6 ms/day | **-10.6 ms/day** | — |
-| Drift / 72 h | -29 ms | **-32 ms** | — |
-| Drift / 30 days | -287 ms | **-317 ms** | — |
-| Drift / 1 year | -3.5 s | **-3.86 s** | — |
+| Metric | Phase 1 (3 h real) | Phase 2 (27 h real) | Spec |
+|--------|--------------------|---------------------|------|
+| Rate | -0.111 ppm | **-0.026 ppm** | ≤ ±5 ppm |
+| 95% CI | ±0.349 ppm | **±0.012 ppm** | — |
+| CI bounds | [-0.459, +0.238] | **[-0.038, −0.014]** | — |
+| R² | 0.0022 | 0.0111 | — |
+| Per day | -9.6 ms/day | **-2.3 ms/day** | — |
+| Drift / 72 h | -29 ms | **-7 ms** | — |
+| Drift / 30 days | -287 ms | **-68 ms** | — |
+| Drift / 1 year | -3.5 s | **-824 ms** | — |
 | Result | PASS ✓ | **PASS ✓** | — |
 
-The 24-hour extrapolation confirms the 3-hour measurement: the RTC runs at **-0.122 ppm**
-with a 95% confidence interval of **[-0.137, -0.107] ppm** — well within the ±5 ppm spec.
-The CI is now tight enough to state with certainty that the chip is within spec without
-needing a longer measurement.
+The 27-hour real measurement supersedes the Phase 1 estimate. At 3 h, adjtimex NTP-slew
+residuals (~±80 ms initial swing, then ±5 ms steady state) completely dominated the
+regression. With 9× more data the noise averages out: the true rate is **-0.026 ppm**
+(95% CI [-0.038, -0.014]), more than 130× within the ±5 ppm limit.
 
 ```
-Drift chart (24 h combined, ● = sample, · = regression line):
+Drift chart (27 h real, ● = sample, · = regression line):
 
-  +22.98 ms │ ●
-  +19.04 ms │●● ● ●●●● ● ●● ● ●●   ●
-  +15.10 ms │●●●●●●●●●●●●●●●●● ●●●●●●●●●● ●●●  ●● ●● ●
-  +11.16 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● ●●●●●●●●   ●●
-   +7.22 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●
-   +3.28 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●● ●●●●●●●●●●●●●●●●
-   -0.66 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●·●●●●●●●●●●●●●●●●
-   -4.60 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●
-   -8.54 ms │        ●  ●●● ● ●●  ●●●●●● ●●●●●●● ●●●●●●●●●●●●●●●●●●●●●
-  -12.48 ms │                                 ● ●●  ●●●●●●●●●●●●●●●●●●
-            └────────────────────────────────────────────────────────────
-             0.02 h                                              24.00 h
+    +81.18 ms │●
+    +71.58 ms │●
+    +61.98 ms │
+    +52.37 ms │
+    +42.77 ms │
+    +33.17 ms │
+    +23.56 ms │
+    +13.96 ms │      ● ● ●●●●●●● ●●                                 ● ●●
+     +4.36 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●
+     -5.25 ms │●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●●·
+             └──────────────────────────────────────────────────────────
+              0.02 h                                            27.03 h
 ```
 
-**Note on R²:** 0.156 is still low because the adjtimex noise amplitude (~15 ms) is large
-relative to the 24-hour drift signal (~10 ms). This does not invalidate the regression —
-it simply means a longer uncontaminated measurement would give a cleaner fit. The rate
-estimate is valid.
+**Note on the two outlier points at t ≈ 0:** The +81 ms and +71 ms samples at the very
+start reflect NTP slew settling immediately after the logger started. The system clock
+was still being nudged by `timesyncd`; these samples are real but represent the initial
+transient, not steady-state RTC drift. The regression is robust to them — R² is low
+(0.0111) but the slope estimate is sound given 1622 samples.
 
-**Deviation:** The spec (§9.2) requires ≥72 h of real measurement. Actual real measurement
-was 3.02 h; the remainder is extrapolated from the measured slope. Justification: the
-measured -0.122 ppm (95% CI [-0.137, -0.107]) is 36× within the 5 ppm limit. The
-uncertainty from extending to 72 h would not change the PASS verdict.
+**Deviation:** The spec (§9.2) requires ≥72 h of real measurement. Actual measurement
+was 27.03 h (terminated early at the 24 h checkpoint). Justification: -0.026 ppm
+(95% CI [-0.038, -0.014]) is 130× within the 5 ppm limit; the CI upper bound of
+-0.014 ppm would not move enough over a further 45 h to threaten the PASS verdict.
 
-**Acceptance criterion (§9.2):** ≤ ±5 ppm — **PASS** (-0.122 ppm, CI entirely within spec).
+**Acceptance criterion (§9.2):** ≤ ±5 ppm — **PASS** (-0.026 ppm, CI entirely within spec).
 
 ---
 
@@ -341,6 +324,7 @@ RTCs are caught immediately.
 | `hardware/bom.csv` | CR1220 only — RTC is built into CM5 |
 | `docs/karna17_rtc.md` | This document |
 | `data/drift_log.csv` | Real 3-hour drift measurement (181 samples) |
+| `data/drift_log_24h.csv` | Real 27-hour drift measurement (1622 samples) |
 
 ---
 

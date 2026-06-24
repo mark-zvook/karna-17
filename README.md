@@ -23,7 +23,7 @@ Cold-start test: RTC held time across full power cut, delta = 1 s  ✓
 4. Cold-start tested: time survived full power cut within ±1 s  ✓
 5. OS config: `fake-hwclock` disabled, `systemd-timesyncd` enabled, `karna-rtc-sync.service` auto-syncs RTC after NTP
 
-**Drift test:** ✅ Measured on real hardware — -0.111 ppm, 95% CI [-0.459, +0.238] ppm, PASS. See `docs/karna17_rtc.md §Drift Test Results`.
+**Drift test:** ✅ 27 h real measurement — **-0.026 ppm**, 95% CI [-0.038, -0.014] ppm, PASS (130× within ±5 ppm spec). See `docs/3h_results_karna17_rtc.md §Drift Test Results`.
 
 ---
 
@@ -38,15 +38,23 @@ sudo bash os/setup_rtc.sh
 ## Drift measurement (on the board)
 
 ```bash
-# Start logger in background (3 h default):
+# Start logger in background (72 h full run):
+nohup bash tools/drift_watch.sh > data/drift_watch.log 2>&1 &
+echo "Watch PID: $!"
+
+# Or a shorter ad-hoc run:
 nohup python3 tools/drift_logger.py --output data/drift_log.csv > data/drift_logger.log 2>&1 &
 echo $!
 
 # Check progress any time:
-tail -f data/drift_logger.log
+tail -f data/drift_watch.log        # watch script status + checkpoints
+tail -f data/drift_logger.log       # raw logger output
 
 # Analyse (works on partial data):
-python3 tools/drift_analysis.py data/drift_log.csv
+python3 tools/drift_analysis.py data/drift_log_72h.csv
+
+# Stop early if needed:
+pkill -f drift_logger.py && pkill -f drift_watch.sh
 ```
 
 ---
@@ -69,7 +77,9 @@ os/setup_rtc.sh                        Idempotent setup
 src/sensors/rtc.py                     Python adapter (RtcStatus, is_time_valid, …)
 tests/test_rtc.py                      34 pytest tests, all mocked
 tools/drift_logger.py                  Samples hwclock vs system, writes CSV
-tools/drift_analysis.py               Linear regression + extrapolation to 72h/30d/1y
-docs/karna17_rtc.md                    Full documentation
-data/drift_log.csv                     Drift measurements (fill by running drift_logger)
+tools/drift_analysis.py                Linear regression + extrapolation to 72h/30d/1y
+tools/drift_watch.sh                   72h watch script with 24h/48h/72h checkpoints
+docs/3h_results_karna17_rtc.md         Full documentation + drift test results
+data/drift_log.csv                     Phase 1: 3h real measurement (181 samples)
+data/drift_log_24h.csv                 Phase 2: 27h real measurement (1622 samples)
 ```
